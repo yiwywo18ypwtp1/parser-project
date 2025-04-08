@@ -26,3 +26,6 @@ class Member(models.Model):
 class Result(models.Model):
     name = CharField(max_length=50)
     link = CharField(max_length=255, null=True)
+
+    def __str__(self):
+        return f'{self.name} | {self.link}'

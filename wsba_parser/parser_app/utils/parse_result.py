@@ -4,6 +4,9 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import requests
 
+from parser_app.models import Result
+
+
 base_url = 'https://www.mywsba.org/'
 url = 'https://www.mywsba.org/PersonifyEbusiness/LegalDirectory.aspx?ShowSearchResults=TRUE&Country=USA'
 
@@ -38,5 +41,14 @@ def get_results():
                     full_url = None
 
                 print(f'{full_name} - {full_url}')
+
+                # сейвим в бд
+                result = Result(
+                    name=full_name,
+                    link=full_url
+                )
+                result.save()
     else:
         print("table not found")
+
+
