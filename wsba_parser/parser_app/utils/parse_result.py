@@ -5,9 +5,10 @@ from bs4 import BeautifulSoup
 import requests
 
 from parser_app.models import Result
+from parser_app.utils import parse_mebmer
 
 
-base_url = 'https://www.mywsba.org/'
+base_url = 'https://www.mywsba.org/PersonifyEbusiness/'
 url = 'https://www.mywsba.org/PersonifyEbusiness/LegalDirectory.aspx?ShowSearchResults=TRUE&Country=USA'
 
 response = requests.get(url)
@@ -41,6 +42,8 @@ def get_results():
                     full_url = None
 
                 print(f'{full_name} - {full_url}')
+
+                parse_mebmer.get_member(full_url)
 
                 # сейвим в бд
                 result = Result(

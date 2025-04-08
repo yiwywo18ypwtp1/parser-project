@@ -5,22 +5,22 @@ import requests
 
 from parser_app.models import Member
 
-url = 'https://www.mywsba.org/PersonifyEbusiness/Default.aspx?TabID=1538&Usr_ID=000000063517'
 
-response = requests.get(url)
+def get_member(url):
+    url = url
 
-if response.status_code == 200:
-    html = response.text
-    soup = BeautifulSoup(html, 'html.parser')
-    print('Page loaded successfully')
-else:
-    soup = None
-    print('Page load error')
+    response = requests.get(url)
 
-profile = {}
+    if response.status_code == 200:
+        html = response.text
+        soup = BeautifulSoup(html, 'html.parser')
+        print('Page loaded successfully')
+    else:
+        soup = None
+        print('Page load error')
 
+    profile = {}
 
-def get_member():
     # MMAIN INFORMATION
     try:
         profile['full_name'] = soup.find('span', class_='name').text

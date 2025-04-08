@@ -4,9 +4,9 @@ from parser_app.utils import parse_mebmer, parse_result
 
 
 # Create your views here.
-def parse_members(request):
+def parse_members(request, url):
     try:
-        parse_mebmer.get_member()
+        parse_mebmer.get_member(url)
 
         return HttpResponse("data parsed and saved succesSful!", status=200)
 
