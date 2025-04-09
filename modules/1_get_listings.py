@@ -22,7 +22,7 @@ for i in range(6):
     if response.status_code == 200:
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
-        print('page loaded successfully')
+        print(f'page loaded successfully: {url}')
 
         search_table = soup.find('table', class_="search-results")
 

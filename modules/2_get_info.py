@@ -122,6 +122,7 @@ def get_member(url, result):
         }
     )
     result.status = 'Done'
+    result.save()
 
 
 
