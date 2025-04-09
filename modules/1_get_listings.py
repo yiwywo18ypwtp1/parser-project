@@ -1,4 +1,3 @@
-import json
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
@@ -15,7 +14,7 @@ from parser_app.models import Result
 base_url = 'https://www.mywsba.org/PersonifyEbusiness/'
 # url = 'https://www.mywsba.org/PersonifyEbusiness/LegalDirectory.aspx?ShowSearchResults=TRUE&Country=USA&Page=0'
 
-for i in range(6):
+for i in range(2):
     url = f'https://www.mywsba.org/PersonifyEbusiness/LegalDirectory.aspx?ShowSearchResults=TRUE&Country=USA&Page={i}'
     response = requests.get(url)
 
