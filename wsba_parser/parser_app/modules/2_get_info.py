@@ -3,7 +3,12 @@ import json
 from bs4 import BeautifulSoup
 import requests
 
-from parser_app.models import Member
+from load_django import *
+from parser_app.models import Member, Result
+
+""""
+Проход по сссылками и собирание полной информации
+"""
 
 
 def get_member(url):
@@ -117,6 +122,9 @@ def get_member(url):
     )
     member.save()
 
-# with open('export/profile.json', 'w', encoding='utf-8') as file:
-#     json.dump(profile, file, indent=4, ensure_ascii=False)
-# print(f"данные сохранены в json")
+
+all_results = Result.objects.all()
+
+for result in all_results:
+    result_url = result.link
+    get_member(result_url)

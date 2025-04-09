@@ -1,24 +1,25 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from parser_app.utils import parse_mebmer, parse_result
+# from parser_app.modules import get_info_2, get_lisnings_1
 
 
-# Create your views here.
 def parse_members(request, url):
-    try:
-        parse_mebmer.get_member(url)
-
-        return HttpResponse("data parsed and saved succesSful!", status=200)
-
-    except Exception as e:
-        return HttpResponse(f"parsing error: {str(e)}", status=500)
+    # try:
+    #     2_get_info.get_member(url)
+    #
+    #     return HttpResponse("data parsed and saved succesSful!", status=200)
+    #
+    # except Exception as e:
+    #     return HttpResponse(f"parsing error: {str(e)}", status=500)
+    pass
 
 
 def parse_results(request):
-    try:
-        parse_result.get_results()
-
-        return HttpResponse("data parsed and saved succesSful!", status=200)
-
-    except Exception as e:
-        return HttpResponse(f"parsing error: {str(e)}", status=500)
+    # try:
+    #     get_lisnings_1.get_results()
+    #
+    #     return HttpResponse("data parsed and saved succesSful!", status=200)
+    #
+    # except Exception as e:
+    #     return HttpResponse(f"parsing error: {str(e)}", status=500)
+    pass

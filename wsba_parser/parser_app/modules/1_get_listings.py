@@ -4,8 +4,12 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import requests
 
+from load_django import *
 from parser_app.models import Result
-from parser_app.utils import parse_mebmer
+
+""""
+Собираем ссылки на людей с таблицы
+"""
 
 
 base_url = 'https://www.mywsba.org/PersonifyEbusiness/'
@@ -43,7 +47,7 @@ def get_results():
 
                 print(f'{full_name} - {full_url}')
 
-                parse_mebmer.get_member(full_url)
+
 
                 # сейвим в бд
                 result = Result(
