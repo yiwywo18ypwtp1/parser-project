@@ -24,8 +24,8 @@ class Member(models.Model):
 
 
 class Result(models.Model):
-    name = CharField(max_length=100)
+    status = CharField(max_length=20, null=True, default='New')
     link = CharField(max_length=255, null=True)
 
     def __str__(self):
-        return f'{self.name} | {self.link}'
+        return f'{self.link} | {self.status}'

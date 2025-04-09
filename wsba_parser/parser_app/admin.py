@@ -2,6 +2,5 @@ from django.contrib import admin
 
 from .models import Member, Result
 
-# Register your models here.
-admin.site.register(Member)
-admin.site.register(Result)
+# admin.site.register(Member)
+# admin.site.register(Result)

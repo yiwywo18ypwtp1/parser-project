@@ -11,7 +11,7 @@ from parser_app.models import Member, Result
 """
 
 
-def get_member(url):
+def get_member(url, result):
     url = url
 
     response = requests.get(url)
@@ -103,28 +103,30 @@ def get_member(url):
     for key, value in profile.items():
         print(f'{key}: {value}')
 
-    member = Member(
-        full_name=profile['full_name'],
+    member, created = Member.objects.get_or_create(
         license_number=profile['license_number'],
-        license_type=profile['license_type'],
-        license_status=profile['license_status'],
-
-        email=profile['email'],
-        phone=profile['phone'],
-        fax=profile['fax'],
-        website=profile['website'],
-        ttd=profile['ttd'],
-
-        private_practice=profile['private_practice'],
-        is_has_insurance=profile['is_has_insurance'],
-        last_update=profile['last_update'],
-        member_of_groups=profile['member_of_groups'],
+        defaults={
+            'full_name': profile['full_name'],
+            'license_number': profile['license_number'],
+            'license_type': profile['license_type'],
+            'license_status': profile['license_status'],
+            'email': profile['email'],
+            'phone': profile['phone'],
+            'fax': profile['fax'],
+            'website': profile['website'],
+            'ttd': profile['ttd'],
+            'private_practice': profile['private_practice'],
+            'is_has_insurance': profile['is_has_insurance'],
+            'last_update': profile['last_update'],
+            'member_of_groups': profile['member_of_groups'],
+        }
     )
-    member.save()
+    result.status = 'Done'
 
 
-all_results = Result.objects.all()
+
+all_results = Result.objects.filter(status='New')
 
 for result in all_results:
     result_url = result.link
-    get_member(result_url)
+    get_member(result_url, result)
