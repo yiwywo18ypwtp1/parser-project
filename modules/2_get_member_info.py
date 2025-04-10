@@ -1,6 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
 
+import asyncio
+import aiohttp
+
+from asgiref.sync import sync_to_async
+
 from load_django import *
 from parser_app.models import Member, Result
 
@@ -8,20 +13,44 @@ from parser_app.models import Member, Result
 Проход по сссылками и собирание полной информации
 """
 
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Connection": "keep-alive",
+    "Referer": "https://www.google.com/",
+    "Upgrade-Insecure-Requests": "1",
+}
 
-def get_member(url, history):
-    url = url
+MAX_CONCURRENT_REQUESTS = 30
 
-    response = requests.get(url)
+semaphore = asyncio.Semaphore(MAX_CONCURRENT_REQUESTS)
 
-    if response.status_code == 200:
-        html = response.text
-        soup = BeautifulSoup(html, 'html.parser')
-        print('Page loaded successfully')
-    else:
-        soup = None
-        print('Page load error')
 
+async def fetch(session, url):
+    try:
+        async with semaphore:
+            async with session.get(url, headers=HEADERS, timeout=30) as response:
+                if response.status == 200:
+                    print(f'страница загружена: {url}')
+                    return await response.text()
+                else:
+                    print(f'ошибка загрузки страницы: {url} — статус {response.status}')
+    except asyncio.TimeoutError:
+        print(f'\n\nтаймаут: {url}\n\n')
+    except aiohttp.ClientError as e:
+        print(f'ошибка aiohttp: {url} — {e}')
+    return None
+
+
+async def get_member(session, result):
+    url = result.link
+    html = await fetch(session, url)
+
+    if not html:
+        return
+
+    soup = BeautifulSoup(html, 'html.parser')
     profile = {}
 
     # MMAIN INFORMATION
@@ -57,11 +86,6 @@ def get_member(url, history):
 
     # Contact Information
     try:
-        profile['public_adress'] = soup.find(string="Public/Mailing Address:").find_next('span').text
-    except (AttributeError, AssertionError) as e:
-        profile['public_adress'] = None
-
-    try:
         profile['email'] = soup.find(string="Email:").find_next('span').text
     except (AttributeError, AssertionError) as e:
         profile['email'] = None
@@ -87,12 +111,6 @@ def get_member(url, history):
         profile['ttd'] = None
 
     # Professional Liability Insurance
-    # try:
-    #     private_practice = soup.find(string="Private Practice:")
-    #     if private_practice:
-    #         profile['private_practice'] = private_practice.find('span').text
-    #     else:
-    #         profile['private_practice'] = 'NONE'
     try:
         profile['private_practice'] = soup.find(string="Private Practice:").find('span').text
     except (AttributeError, AssertionError) as e:
@@ -133,7 +151,6 @@ def get_member(url, history):
     except (AttributeError, AssertionError) as e:
         profile['volunteer_service_history'] = None
 
-
     try:
         profile['firm_or_employer'] = soup.find(string="Firm or Employer:").find_next('span').text
     except (AttributeError, AssertionError) as e:
@@ -159,44 +176,39 @@ def get_member(url, history):
     except (AttributeError, AssertionError) as e:
         profile['has_ever_was_as_judge'] = None
 
-
-
     for key, value in profile.items():
         print(f'{key}: {value}')
 
-    member, created = Member.objects.get_or_create(
-        license_number=profile['license_number'],
-        defaults={
-            'full_name': profile['full_name'],
-            'license_number': profile['license_number'],
-            'license_type': profile['license_type'],
-            'license_status': profile['license_status'],
-            'eligible_to_practice': profile['eligible_to_practice'],
-            'admit_date': profile['admit_date'],
-            'email': profile['email'],
-            'phone': profile['phone'],
-            'fax': profile['fax'],
-            'website': profile['website'],
-            'ttd': profile['ttd'],
-            'private_practice': profile['private_practice'],
-            'is_has_insurance': profile['is_has_insurance'],
-            'last_update': profile['last_update'],
-            'member_of_groups': profile['member_of_groups'],
-            'volunteer_service_history': profile['volunteer_service_history'],
-            'firm_or_employer': profile['firm_or_employer'],
-            'office_type_and_size': profile['office_type_and_size'],
-            'practice_areas': profile['practice_areas'],
-            'languages_other_than_english': profile['languages_other_than_english'],
-            'has_ever_was_as_judge': profile['has_ever_was_as_judge'],
-        }
-    )
-    result.status = 'Done'
-    result.save()
+    await save_member_to_db(profile, result)
 
 
+# Выносим все ORM операции в отдельные sync_to_async функции
+@sync_to_async
+def save_member_to_db(profile, result):
+    try:
+        Member.objects.update_or_create(
+            license_number=profile['license_number'],
+            defaults=profile
+        )
+        result.status = 'Done'
+        result.save()
+    except Exception as e:
+        print(f"Ошибка сохранения: {e}")
 
-all_results = Result.objects.filter(status='New')
 
-for result in all_results:
-    result_url = result.link
-    get_member(result_url, result)
+@sync_to_async
+def get_all_results():
+    return list(Result.objects.filter(status='New'))
+
+
+async def main():
+    all_results = await get_all_results()
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [get_member(session, result) for result in all_results]
+        await asyncio.gather(*tasks)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
